@@ -491,7 +491,7 @@ async function loadGames() {
     const leekData = await leekRes.json();
     const gameFiles = [];
     for (const file of leekData.tree) {
-        if (file.path.endsWith(".html")) {
+        if (file.path.endsWith(".html") && file.path.startsWith("games/")) {
             gameFiles.push(file.path.replace("games/", "").replace(".html", ""));
         }
     }
