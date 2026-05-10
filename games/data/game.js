@@ -18,8 +18,8 @@ Module.expectedDataFileDownloads++;
 		} else {
 			throw "using preloaded data can only be done on a web page or in a web worker";
 		}
-		var PACKAGE_NAME = "game.data";
-		var REMOTE_PACKAGE_BASE = "game.data";
+		var PACKAGE_NAME = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main/games/data/game.data";
+		var REMOTE_PACKAGE_BASE = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main/games/data/game.data";
 		if (typeof Module["locateFilePackage"] === "function" && !Module["locateFile"]) {
 			Module["locateFile"] = Module["locateFilePackage"];
 			Module.printErr("warning: you defined Module.locateFilePackage, that has been renamed to Module.locateFile (using your locateFilePackage for now)");
