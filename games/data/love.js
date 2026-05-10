@@ -699,7 +699,7 @@ var Love = (function () {
 		function isFileURI(filename) {
 			return hasPrefix(filename, fileURIPrefix);
 		}
-		var wasmBinaryFile = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main/games/data/love.wasm";
+		var wasmBinaryFile = "love.wasm";
 		if (!isDataURI(wasmBinaryFile)) {
 			wasmBinaryFile = locateFile(wasmBinaryFile);
 		}
