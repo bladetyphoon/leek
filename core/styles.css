@@ -1,0 +1,535 @@
+body {
+    background-color: #252525;
+    overflow-x: hidden;
+}
+
+body.page-hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+body.page-visible {
+    opacity: 1;
+    transition: opacity 0.4s ease;
+}
+
+.navbar {
+    position: relative;
+    background-color: #272927;
+    border-style: solid;
+    border-color: #3c3737;
+    border-width: 2px;
+    border-radius: 100px;
+    box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2);
+    margin: 20px 100px 20px;
+    display: flex;
+    align-items: center;
+    overflow: visible;
+}
+
+.title {
+    padding-left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    user-select: none;
+}
+
+.title p {
+    color: #ffff;
+}
+
+.title img {
+    width: 5%;
+    height: 5%;
+    object-fit: cover;
+}
+
+.hstack {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.vstack {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.search {
+    background-color: #272927;
+    border-style: solid;
+    border-color: #3c3737;
+    border-width: 2px;
+    border-radius: 100px;
+    box-shadow: 0 6px 6px rgba(0, 0, 0, 0.2);
+    color: #fff;
+    padding: 10px;
+    outline: none;
+    margin: auto 6px auto auto;
+}
+
+.game {
+    position: relative;
+    width: 160px;
+    aspect-ratio: 1 / 1;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    user-select: none;
+
+    box-shadow: 0 6px 10px rgba(0,0,0,0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.game img.bg {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    transform: scale(1.1);
+    transition: transform 0.35s ease, filter 0.35s ease;
+}
+
+.overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    color: white;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+
+    z-index: 2;
+
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.game:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 14px 24px rgba(0,0,0,0.4);
+}
+
+.game:hover img.bg {
+    transform: scale(1.15);
+    filter: brightness(0.5);
+}
+
+.game:hover .overlay {
+    opacity: 1;
+    transform: scale(1.05);
+}
+
+.overlay-screen {
+    position: fixed;
+    inset: 0;
+    z-index: 99999;
+    isolation: isolate;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0, 0, 0, 0);
+    opacity: 1;
+    pointer-events: none;
+
+    transition: background 0.4s ease;
+}
+
+.overlay-screen.active {
+    pointer-events: auto;
+}
+
+.overlay-screen.active.show {
+    background: rgba(0, 0, 0, 0.82);
+}
+
+#overlayContent {
+    width: 90%;
+    height: 90%;
+    background: #1e1e1e;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.07);
+
+    position: relative;
+    overflow: hidden;
+
+    transform: translateY(40px) scale(0.96);
+    opacity: 0;
+    filter: blur(6px);
+    will-change: transform, opacity, filter;
+
+    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.04);
+
+    transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1),
+                opacity 0.4s ease,
+                filter 0.45s ease;
+}
+
+#overlayContent iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+    border-radius: 20px;
+}
+
+.overlay-screen.active.show #overlayContent {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    filter: blur(0px);
+}
+
+.control-tray {
+    position: absolute;
+    top: 50%;
+    right: calc(5vw / 2 - 20px);
+    transform: translateY(-50%) translateX(20px);
+
+    z-index: 100000;
+
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    opacity: 0;
+    pointer-events: none;
+
+    transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.overlay-screen.active.outside .control-tray {
+    opacity: 1;
+    transform: translateY(-50%) translateX(0);
+    pointer-events: auto;
+}
+
+.tray-btn {
+    width: 40px;
+    height: 40px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 50%;
+
+    background: rgba(20, 20, 20, 0.88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: white;
+    font-size: 16px;
+    line-height: 1;
+
+    cursor: pointer;
+
+    transition: background 0.2s ease,
+                border-color 0.2s ease,
+                transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.tray-btn:hover {
+    background: rgba(60, 60, 60, 0.95);
+    border-color: rgba(255, 255, 255, 0.28);
+    transform: scale(1.12);
+}
+
+.tray-btn:active {
+    transform: scale(0.94);
+}
+
+#closeOverlay {
+    font-size: 20px;
+    color: #e05555;
+    border-color: rgba(220, 80, 80, 0.25);
+}
+
+#closeOverlay:hover {
+    background: rgba(200, 50, 50, 0.25);
+    border-color: rgba(220, 80, 80, 0.5);
+    color: #ff6b6b;
+}
+
+#confirmBackdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0);
+    transition: background 0.25s ease;
+}
+
+#confirmBackdrop.show {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+#confirmBox {
+    background: #1e1e1e;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 28px 32px;
+    min-width: 300px;
+    text-align: center;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
+
+    transform: translateY(16px) scale(0.95);
+    opacity: 0;
+    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease;
+}
+
+#confirmBackdrop.show #confirmBox {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+#confirmBox p {
+    color: #fff;
+    font-size: 15px;
+    margin: 0 0 20px;
+    line-height: 1.5;
+}
+
+.confirm-btns {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.confirm-btns button {
+    padding: 9px 20px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,0.1);
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+
+#confirmYes {
+    background: rgba(220, 60, 60, 0.8);
+    color: #fff;
+}
+
+#confirmYes:hover {
+    background: rgba(220, 60, 60, 1);
+    transform: scale(1.04);
+}
+
+#confirmNo {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+#confirmNo:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(1.04);
+}
+
+#confirmMinimize {
+    background: rgba(60, 120, 220, 0.25);
+    color: #8ab4ff;
+    border-color: rgba(100, 150, 255, 0.2);
+}
+
+#confirmMinimize:hover {
+    background: rgba(60, 120, 220, 0.45);
+    transform: scale(1.04);
+}
+
+.game.minimized::after {
+    content: "●";
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 10px;
+    height: 10px;
+    background: #4caf50;
+    border-radius: 50%;
+    border: 2px solid #252525;
+    font-size: 0;
+    z-index: 3;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.8);
+}
+
+#taskbar {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 90000;
+    display: flex;
+    flex-direction: row;
+    align-items: flex-end;
+    gap: 6px;
+    padding: 0 12px;
+    pointer-events: none;
+}
+
+.taskbar-tab {
+    position: relative;
+    height: 40px;
+    pointer-events: auto;
+    cursor: pointer;
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 8px 0 12px;
+    overflow: hidden;
+
+    background: rgba(30, 30, 30, 0.92);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: none;
+    border-radius: 10px 10px 0 0;
+    backdrop-filter: blur(12px);
+
+    transition: background 0.2s ease;
+    user-select: none;
+
+    transform: translateY(100%);
+    opacity: 0;
+}
+
+.taskbar-tab.slide-in {
+    animation: tabSlideIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.taskbar-tab.slide-out {
+    animation: tabSlideOut 0.25s ease-in forwards;
+}
+
+@keyframes tabSlideIn {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes tabSlideOut {
+    from { transform: translateY(0);    opacity: 1; }
+    to   { transform: translateY(100%); opacity: 0; }
+}
+
+.taskbar-tab:hover {
+    background: rgba(45, 45, 45, 0.97);
+}
+
+.tab-icon {
+    width: 22px;
+    height: 22px;
+    border-radius: 5px;
+    object-fit: cover;
+    flex-shrink: 0;
+}
+
+.tab-label {
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+}
+
+.tab-close {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.35);
+    cursor: pointer;
+    padding: 0;
+    transition: background 0.15s ease, color 0.15s ease;
+}
+
+.tab-close svg {
+    width: 12px;
+    height: 12px;
+}
+
+.tab-close:hover {
+    background: rgba(220, 60, 60, 0.25);
+    color: #e05555;
+}
+
+.loading-msg {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+}
+
+#coverScreen {
+    position: fixed;
+    inset: 0;
+    z-index: 300000;
+    background: #fff;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+#coverScreen.show {
+    opacity: 1;
+}
+
+#coverScreen iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    display: block;
+}
+
+#coverClose {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 300001;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(240, 240, 240, 0.5);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+    color: rgba(0, 0, 0, 0.3);
+    transition: background 0.2s ease, color 0.2s ease, transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#coverClose svg {
+    width: 14px;
+    height: 14px;
+}
+
+#coverClose:hover {
+    background: rgba(220, 220, 220, 0.85);
+    color: rgba(0, 0, 0, 0.65);
+    transform: scale(1.1);
+}
