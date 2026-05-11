@@ -1,0 +1,10 @@
+{
+  "companyName": "IDnet",
+  "productName": "Slope",
+
+  "dataUrl": "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main/games/extra/slope/game.data.unityweb",
+
+  "wasmCodeUrl": "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main/games/extra/slope/game.wasm.unityweb",
+
+  "wasmFrameworkUrl": "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main/games/extra/slope/game.framework.js.unityweb"
+}
