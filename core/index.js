@@ -341,9 +341,26 @@ async function openGame(game) {
     if (activeGame !== game) return;
 
     try {
-        const res = await fetch(`${CDN}/games/${game}.html`);
-        let html = await res.text();
-        slot.lastGameHtml = html;
+let html;
+
+try {
+    const res = await fetch(`${CDN}/games/${game}.html`);
+
+    if (!res.ok) throw new Error("CDN failed");
+
+    html = await res.text();
+} catch (err) {
+    // fallback to raw GitHub
+    const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
+
+    const res = await fetch(githubURL);
+
+    if (!res.ok) throw new Error("GitHub fallback also failed");
+
+    html = await res.text();
+}
+
+slot.lastGameHtml = html;
 
         const audioPatch = `<script>
 (function() {
