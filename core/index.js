@@ -412,7 +412,7 @@ function addTaskbarTab(game) {
 
     const label = document.createElement("span");
     label.className = "tab-label";
-    label.textContent = capitalize(game);
+    label.textContent = game;
 
     const closeBtn = document.createElement("button");
     closeBtn.className = "tab-close";
@@ -518,7 +518,7 @@ function renderGames(gameData) {
 
         const title = document.createElement("p");
         title.classList.add("overlay");
-        title.textContent = capitalize(game);
+        title.textContent = game;
 
         div.appendChild(img);
         div.appendChild(title);
