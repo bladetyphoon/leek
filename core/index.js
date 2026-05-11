@@ -1,4 +1,4 @@
-const CDN = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest";
+const CDN = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main";
 
 function capitalize(str) {
     return str
@@ -15,6 +15,7 @@ const ICONS = {
     minimize: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
     download: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>`,
     eyeOff: `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/><line x1="1" y1="1" x2="23" y2="23"/></svg>`,
+    refresh: `<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>`,
 };
 
 const gameSlots = {};
@@ -50,7 +51,7 @@ function initOverlay() {
     overlay.id = "gameOverlay";
     overlay.className = "overlay-screen";
     overlay.innerHTML = `
-        <div class="control-tray">
+        <div class="control-tray edge-right">
             <button id="closeOverlay"  class="tray-btn" title="Close">${ICONS.close}</button>
             <button id="fullscreenBtn" class="tray-btn" title="Fullscreen">${ICONS.fullscreen}</button>
             <button id="minimizeBtn"   class="tray-btn" title="Minimize">${ICONS.minimize}</button>
@@ -106,13 +107,51 @@ function bindOverlayEvents() {
     const overlay = getOverlay();
     const overlayContent = getOverlayContent();
 
+    const EDGES = ["edge-right", "edge-left", "edge-top", "edge-bottom"];
+
+    let currentEdge = "edge-right";
+
+    function setTrayEdge(edge) {
+        const tray = document.querySelector(".control-tray");
+        if (!tray || edge === currentEdge) return;
+        currentEdge = edge;
+
+        tray.style.transition = "none";
+        EDGES.forEach(e => tray.classList.remove(e));
+        tray.classList.add(edge);
+        overlay.classList.remove("outside");
+
+        tray.offsetHeight;
+        
+        tray.style.transition = "";
+        overlay.classList.add("outside");
+    }
+
+    function detectEdge(e) {
+        const vw = window.innerWidth;
+        const x = e.clientX;
+        const gutterH = vw * 0.05;
+
+        const inLeft  = x < gutterH;
+        const inRight = (vw - x) < gutterH;
+
+        if (!inLeft && !inRight) return null;
+        return (vw - x) <= x ? "edge-right" : "edge-left";
+    }
+
+    overlay.addEventListener("mousemove", (e) => {
+        if (!overlay.classList.contains("active")) return;
+        const edge = detectEdge(e);
+        if (edge) setTrayEdge(edge);
+    });
+
     overlay.addEventListener("mouseenter", () => overlay.classList.add("outside"));
     overlayContent.addEventListener("mouseenter", () => overlay.classList.remove("outside"));
     overlayContent.addEventListener("mouseleave", () => overlay.classList.add("outside"));
 
     document.getElementById("closeOverlay").addEventListener("click", async (e) => {
         e.stopPropagation();
-        const result = await showConfirm("Are you sure you want to close the game?<br>Your progress will be lost.", true);
+        const result = await showConfirm("Are you sure you want to close the game?<br>Your progress may be lost. Minimize instead to save.", true);
         if (!result) return;
 
         if (result === "minimize") {
@@ -188,7 +227,6 @@ function hideTray() {
     const tray = document.querySelector(".control-tray");
     if (tray) {
         tray.style.opacity = "0";
-        tray.style.transform = "translateY(-50%) translateX(20px)";
         tray.style.pointerEvents = "none";
     }
 }
@@ -197,7 +235,6 @@ function restoreTray() {
     const tray = document.querySelector(".control-tray");
     if (tray) {
         tray.style.opacity = "";
-        tray.style.transform = "";
         tray.style.pointerEvents = "";
     }
 }
@@ -329,7 +366,15 @@ async function openGame(game) {
     const slot = createGameSlot(game);
     activeGame = game;
 
-    slot.container.innerHTML = `<div class="loading-msg">Loading…</div>`;
+    slot.container.innerHTML = `
+        <div class="loading-msg">
+            <div class="loading-inner">
+                <span class="loading-text">Loading...</span>
+                <div class="loading-bar-track">
+                    <div class="loading-bar-fill" id="loadingBarFill"></div>
+                </div>
+            </div>
+        </div>`;
     restoreTray();
     syncMuteButton();
     showOverlay();
@@ -340,27 +385,52 @@ async function openGame(game) {
 
     if (activeGame !== game) return;
 
+    function setLoadProgress(pct) {
+        if (activeGame !== game) return;
+        const bar = document.getElementById("loadingBarFill");
+        if (bar) bar.style.width = `${Math.min(100, Math.round(pct))}%`;
+    }
+
+    async function fetchWithProgress(url) {
+        const res = await fetch(url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+        const contentLength = res.headers.get("Content-Length");
+        const total = contentLength ? parseInt(contentLength, 10) : 0;
+
+        const reader = res.body.getReader();
+        const chunks = [];
+        let received = 0;
+
+        while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            received += value.length;
+            if (total) setLoadProgress((received / total) * 100);
+            else setLoadProgress(Math.min(90, received / 5000));
+        }
+
+        const combined = new Uint8Array(received);
+        let offset = 0;
+        for (const chunk of chunks) { combined.set(chunk, offset); offset += chunk.length; }
+        return new TextDecoder().decode(combined);
+    }
+
     try {
-let html;
+        let html;
 
-try {
-    const res = await fetch(`${CDN}/games/${game}.html`);
+        try {
+            html = await fetchWithProgress(`${CDN}/games/${game}.html&no_cache=${Date.now()}`);
+        } catch (err) {
+            setLoadProgress(0);
+            const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
+            html = await fetchWithProgress(githubURL);
+        }
 
-    if (!res.ok) throw new Error("CDN failed");
+        setLoadProgress(100);
 
-    html = await res.text();
-} catch (err) {
-    // fallback to raw GitHub
-    const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
-
-    const res = await fetch(githubURL);
-
-    if (!res.ok) throw new Error("GitHub fallback also failed");
-
-    html = await res.text();
-}
-
-slot.lastGameHtml = html;
+        slot.lastGameHtml = html;
 
         const audioPatch = `<script>
 (function() {
@@ -438,7 +508,7 @@ function addTaskbarTab(game) {
 
     closeBtn.addEventListener("click", async (e) => {
         e.stopPropagation();
-        const result = await showConfirm("Close this game?<br>Your progress will be lost.");
+        const result = await showConfirm("Close this game?<br>Your progress may be lost.");
         if (result !== "close") return;
 
         tab.classList.add("slide-out");
@@ -522,6 +592,14 @@ function renderGames(gameData) {
     const gameList = document.getElementById("games");
     gameList.innerHTML = "";
 
+    if (gameData.length === 0) {
+        const msg = document.createElement("p");
+        msg.className = "no-results";
+        msg.textContent = "No games found.";
+        gameList.appendChild(msg);
+        return;
+    }
+
     for (const game of gameData) {
         const div = document.createElement("div");
         div.classList.add("game");
@@ -551,7 +629,6 @@ async function initPage() {
     let gameData = [];
     if (cache) {
         const cacheJson = JSON.parse(cache);
-
         if (Date.now() - cacheJson.timestamp >= 60 * 60 * 1000) {
             console.log("Cached game data 1 hour old, refetching...");
             gameData = await loadGames();
@@ -559,13 +636,75 @@ async function initPage() {
             console.log("Using cached game data.");
             gameData = cacheJson.gameData || [];
         }
-
     }
     if (gameData.length === 0) {
         console.log("Cached game does not exist. Fetching...");
         gameData = await loadGames();
     }
     renderGames(gameData);
+
+    const searchInput = document.getElementById("search");
+    searchInput.addEventListener("input", () => {
+        const query = searchInput.value.trim().toLowerCase();
+        const filtered = query
+            ? gameData.filter(g => g.toLowerCase().includes(query))
+            : gameData;
+        renderGames(filtered);
+    });
+
+    const REFRESH_COOLDOWN = 60;
+    const COOLDOWN_KEY = "refreshCooldownUntil";
+    const refreshBtn = document.getElementById("refreshBtn");
+    let countdownInterval = null;
+
+    function runCooldownUI(until) {
+        clearInterval(countdownInterval);
+        refreshBtn.disabled = true;
+
+        countdownInterval = setInterval(() => {
+            const remaining = Math.ceil((until - Date.now()) / 1000);
+            if (remaining <= 0) {
+                clearInterval(countdownInterval);
+                refreshBtn.disabled = false;
+                refreshBtn.title = "Refresh game list";
+                refreshBtn.querySelector(".refresh-countdown")?.remove();
+                refreshBtn.querySelector("svg").style.opacity = "";
+            } else {
+                refreshBtn.title = `Refresh available in ${remaining}s`;
+                let badge = refreshBtn.querySelector(".refresh-countdown");
+                if (!badge) {
+                    badge = document.createElement("span");
+                    badge.className = "refresh-countdown";
+                    refreshBtn.appendChild(badge);
+                    refreshBtn.querySelector("svg").style.opacity = "0.35";
+                }
+                badge.textContent = remaining;
+            }
+        }, 250);
+    }
+
+    const savedUntil = parseInt(localStorage.getItem(COOLDOWN_KEY) || "0", 10);
+    if (savedUntil > Date.now()) runCooldownUI(savedUntil);
+
+    refreshBtn.addEventListener("click", async () => {
+        if (refreshBtn.disabled) return;
+        refreshBtn.classList.add("spinning");
+        refreshBtn.disabled = true;
+
+        localStorage.removeItem("gameCache");
+        try {
+            gameData = await loadGames();
+            const query = searchInput.value.trim().toLowerCase();
+            renderGames(query ? gameData.filter(g => g.toLowerCase().includes(query)) : gameData);
+        } catch (e) {
+            console.error("Refresh failed:", e);
+        }
+
+        refreshBtn.classList.remove("spinning");
+        const until = Date.now() + REFRESH_COOLDOWN * 1000;
+        localStorage.setItem(COOLDOWN_KEY, until);
+        runCooldownUI(until);
+    });
 }
 
 initPage();
