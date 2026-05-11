@@ -421,7 +421,7 @@ async function openGame(game) {
         let html;
 
         try {
-            html = await fetchWithProgress(`${CDN}/games/${game}.html&no_cache=${Date.now()}`);
+            html = await fetchWithProgress(`${CDN}/games/${game}.html`);
         } catch (err) {
             setLoadProgress(0);
             const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
