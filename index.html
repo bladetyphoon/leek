@@ -5,7 +5,7 @@
     <title>Leek</title>
     <script>
         const v = Date.now();
-        document.write(`<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/styles.css">`);
+        document.write(`<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/styles.css?no_cache=${v}">`);
     </script>
 </head>
 <body>
@@ -21,9 +21,9 @@
     <div class="hstack" id="games">
     </div>
     <script>
-        document.getElementById('leekImg').src = `https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/assets/leek.png`;
+        document.getElementById('leekImg').src = `https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/assets/leek.png?no_cache=${v}`;
         const s = document.createElement('script');
-        s.src = `https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/index.js`;
+        s.src = `https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/index.js?no_cache=${v}`;
         document.body.appendChild(s);
     </script>
 </body>
