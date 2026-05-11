@@ -1,29 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <title>Leek</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/styles.css">
+    <script>
+        const v = Date.now();
+        document.write(`<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/styles.css?no_cache=${v}">`);
+    </script>
 </head>
-
 <body>
     <div class="navbar">
         <div class="title">
-            <img src="https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/assets/leek.png">
+            <img id="leekImg" src="">
             <p>Leek</p>
             <p class="version">v.0.1</p>
         </div>
-
         <input class="search" type="text" id="search" name="Games" placeholder="Search games...">
         <button class="refresh-btn" id="refreshBtn" title="Refresh game list"><svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg></button>
     </div>
-
     <div class="hstack" id="games">
-
     </div>
-
-    <script src="https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/index.js"></script>
+    <script>
+        const v = Date.now();
+        document.getElementById('leekImg').src = `https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/assets/leek.png?no_cache=${v}`;
+        const s = document.createElement('script');
+        s.src = `https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest/core/index.js?no_cache=${v}`;
+        document.body.appendChild(s);
+    </script>
 </body>
-
 </html>
