@@ -61,9 +61,9 @@
       container.style.height = `${height}px`;
     }
 
-    window.addEventListener("resize", resizeGame);
+    // window.addEventListener("resize", resizeGame);
     window.addEventListener("DOMContentLoaded", () => {
-      resizeGame();
+      // resizeGame();
 
       const ruffle = window.RufflePlayer?.newest() || window.RufflePlayer?.createPlayer();
       if (ruffle && container) {

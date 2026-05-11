@@ -109,9 +109,9 @@
       boxRight.style.width = `${leftMargin}px`;
     }
     
-    window.addEventListener("resize", resizeGame);
+    // window.addEventListener("resize", resizeGame);
     window.addEventListener("DOMContentLoaded", () => {
-      resizeGame();
+      // resizeGame();
       const ruffle = window.RufflePlayer?.newest() || window.RufflePlayer?.createPlayer();
       if (ruffle && container) {
         const player = ruffle.createPlayer();
