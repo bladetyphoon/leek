@@ -1,4 +1,4 @@
-const CDN = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@main";
+const CDN = "https://cdn.jsdelivr.net/gh/bladetyphoon/leek@latest";
 
 function capitalize(str) {
     return str
