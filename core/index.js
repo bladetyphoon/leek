@@ -419,12 +419,25 @@ async function openGame(game) {
 
     try {
         let html;
-
+    
+        const cdnURL = `${CDN}/games/${game}.html?no_cache=${Date.now()}`;
+        const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
+    
+        async function fetchWithTimeout(url, timeout = 5000) {
+            return Promise.race([
+                fetchWithProgress(url),
+                new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Fetch timeout")), timeout)
+                )
+            ]);
+        }
+    
         try {
-            html = await fetchWithProgress(`${CDN}/games/${game}.html?no_cache=${Date.now()}`);
+            html = await fetchWithTimeout(cdnURL, 5000);
         } catch (err) {
+            console.warn("CDN fetch failed or timed out, falling back to GitHub:", err);
+    
             setLoadProgress(0);
-            const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
             html = await fetchWithProgress(githubURL);
         }
 
@@ -475,6 +488,37 @@ async function openGame(game) {
     }
 }
 
+function createGameImage(game) {
+    const img = document.createElement("img");
+    img.classList.add("bg");
+
+    const cdnURL = `${CDN}/assets/${game}.jpeg`;
+    const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/assets/${game}.jpeg`;
+
+    let fallbackTriggered = false;
+
+    function useFallback() {
+        if (fallbackTriggered) return;
+        fallbackTriggered = true;
+
+        console.warn(`Image fallback for ${game}`);
+        img.src = githubURL;
+    }
+
+    const timeout = setTimeout(useFallback, 5000);
+
+    img.onload = () => clearTimeout(timeout);
+
+    img.onerror = () => {
+        clearTimeout(timeout);
+        useFallback();
+    };
+
+    img.src = cdnURL;
+
+    return img;
+}
+
 function getTaskbar() {
     let bar = document.getElementById("taskbar");
     if (!bar) {
@@ -492,10 +536,9 @@ function addTaskbarTab(game) {
     const tab = document.createElement("div");
     tab.className = "taskbar-tab";
     tab.id = `tab-${game}`;
-
-    const icon = document.createElement("img");
-    icon.src = `${CDN}/assets/${game}.jpeg`;
-    icon.className = "tab-icon";
+    
+    const icon = createGameImage(game);
+    icon.classList.add("tab-icon");
 
     const label = document.createElement("span");
     label.className = "tab-label";
@@ -607,9 +650,7 @@ function renderGames(gameData) {
 
         if (gameSlots[game]?.minimized) div.classList.add("minimized");
 
-        const img = document.createElement("img");
-        img.classList.add("bg");
-        img.src = `${CDN}/assets/${game}.jpeg`;
+        const img = createGameImage(game);
 
         const title = document.createElement("p");
         title.classList.add("overlay");
