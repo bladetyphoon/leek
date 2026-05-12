@@ -433,7 +433,7 @@ async function openGame(game) {
         }
     
         try {
-            html = await fetchWithTimeout(cdnURL, 5000);
+            html = await fetchWithTimeout(cdnURL, 1000);
         } catch (err) {
             console.warn("CDN fetch failed or timed out, falling back to GitHub:", err);
     
