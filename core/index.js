@@ -420,7 +420,7 @@ async function openGame(game) {
     try {
         let html;
     
-        const cdnURL = `${CDN}/games/${game}.html?no_cache=${Date.now()}`;
+        const cdnURL = `${CDN}/games/${game}.html`;
         const githubURL = `https://raw.githubusercontent.com/bladetyphoon/leek/main/games/${game}.html`;
     
         async function fetchWithTimeout(url, timeout = 5000) {
