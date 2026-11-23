@@ -725,19 +725,23 @@ function launch(t,lift){
 const MISS_BASE=.42,MISS_SC_DUNK=1,MISS_SC_LAY=1;   // early/late shots: how far off the rim center they aim (close shots used to be scaled down so much they still went in)
 const SHOOTER_LOCKOUT=5;   // seconds
 function releaseBall(){
-  const r=P.rot,h=hoopFor();B.held=false;B.hit=false;B.blkTried=false;P.hasBall=false;B.owner=null;B.shooter=CUR;B.age=0;B.blocked=false;
+  const r=P.rot,h=hoopFor();B.held=false;B.hit=false;B.blkTried=false;P.hasBall=false;B.miss=false;B.kicked=false;B.owner=null;B.shooter=CUR;B.age=0;B.blocked=false;
   if(GS.rules)P.pen=SHOOTER_LOCKOUT;   // vs CPU: the shooter can't pick the ball back up for a while, so the other player gets the rebound
   if(P.shot.dunk&&P.shot.perfect){   // slam it straight down through the rim
     B.pos.set(h.x,RIM_Y+.2,h.z);B.vel.set(0,-4.5,0);B.dunk=true;B.perfect=true;B.counted=false;B.cool=.9;B.pts=2;att++;hud();NET.vx+=.5;return;
   }
   const lay=P.style==='layup',soft=lay||P.shot.dunk;
   const t=h.clone();
-  if(!P.shot.perfect){
-    const e=Math.abs(P.shot.m-GC)-M.w/2,dx=h.x-B.pos.x,dz=h.z-B.pos.z,L=Math.hypot(dx,dz)||1;
-    const ux=dx/L,uz=dz/L,off=(P.shot.m<GC?-1:1.15)*((soft?MISS_BASE+.1:MISS_BASE)+Math.min(.85,e*2.2)),lat=(Math.random()<.5?-1:1)*(.1+Math.random()*.15+Math.min(.3,e*1.2));
-    const sc=P.shot.dunk?MISS_SC_DUNK:lay?MISS_SC_LAY:1;t.x+=(ux*off-uz*lat)*sc;t.z+=(uz*off+ux*lat)*sc;
+  let adj=0;   // arc change for misses: a late shot is thrown harder (higher, longer arc), an early one is a little flat and short
+  if(!P.shot.perfect){   // a miss is aimed at the FRONT rim (early) or BACK rim (late), never the middle; the further off the timing, the further off the arc
+    const e=Math.abs(P.shot.m-GC)-M.w/2,dx=h.x-B.pos.x,dz=h.z-B.pos.z,L=Math.hypot(dx,dz)||1,early=P.shot.m<GC,R=Math.random;
+    const ux=dx/L,uz=dz/L,off=early?-(.28+Math.min(.5,e*2)):(.27+Math.min(.3,e*1.4)),lat=(R()<.5?-1:1)*(.05+R()*.1+Math.min(.2,e*.9));
+    adj=early?-Math.min(.3,.06+e*1.2):.12+Math.min(.5,e*2);
+    t.x+=ux*off-uz*lat;t.z+=uz*off+ux*lat;
+    if(!(e<.06&&R()<.15))B.miss=true;   // flagged misses get knocked out by the rim/board; a rare near-perfect miss is left to the physics (it can roll in)
   }
-  launch(t,soft?.45+Math.hypot(h.x-B.pos.x,h.z-B.pos.z)*.08:null);B.perfect=P.shot.perfect;B.counted=false;B.cool=.9;B.pts=P.shot.d>7.24?3:2;att++;hud();
+  launch(t,(soft?.45+Math.hypot(h.x-B.pos.x,h.z-B.pos.z)*.08:1.4+Math.hypot(t.x-B.pos.x,t.z-B.pos.z)*.12)+adj);
+  B.perfect=P.shot.perfect;B.counted=false;B.cool=.9;B.pts=P.shot.d>7.24?3:2;att++;hud();
 }
 
 // ---------- update ----------
@@ -863,6 +867,14 @@ function holdBall(dt){
   }
   B.pos.set(P.pos.x+lx*c+lz*s,y,P.pos.z-lx*s+lz*c);B.vel.set(0,0,0);
 }
+// a missed shot that touches the rim or board is thrown back out (up and away from the hoop) instead of dropping through
+function missKick(v,p,board){
+  if(!B.miss||B.kicked)return;B.kicked=true;
+  const dx=p.x-HOOP_X,dz=p.z,L=Math.hypot(dx,dz),r=Math.random;
+  if(board||dx>0){v.x=-(Math.abs(v.x)*.5+1.2+r()*1.2);v.z+=(r()-.5)*1.6;}   // board / back rim: comes back toward the shooter, keeping some of its own speed
+  else{const ux=L>.02?dx/L:-1,uz=L>.02?dz/L:0,s=1.2+r()*1.4;v.x=v.x*.3+ux*s;v.z=v.z*.3+uz*s;}   // front rim: out and away from the hoop
+  v.y=Math.max(v.y,1.8+r()*1.4);
+}
 function stepBall(dt){
   const n=6,h=dt/n,p=B.pos,v=B.vel;
   for(let i=0;i<n;i++){
@@ -875,11 +887,11 @@ function stepBall(dt){
     if(Math.abs(dx)<1.2&&Math.abs(p.z)<1.2&&p.y>2&&p.y<4.8){
       if(!B.perfect){
         const gap=BOARD_X-sg*p.x;
-        if(Math.abs(p.z)<.915+BR&&p.y>2.9-BR&&p.y<3.97+BR&&gap<BR&&gap>-.15&&sg*v.x>0){p.x=sg*(BOARD_X-BR);v.x*=-.45;v.y*=.9;B.hit=true;}
+        if(Math.abs(p.z)<.915+BR&&p.y>2.9-BR&&p.y<3.97+BR&&gap<BR&&gap>-.15&&sg*v.x>0){p.x=sg*(BOARD_X-BR);v.x*=-.45;v.y*=.9;B.hit=true;missKick(v,p,true);}
         for(const[cx,cz]of RIM){
           const ex=p.x-(hx+cx),ey=p.y-RIM_Y,ez=p.z-cz,L=Math.hypot(ex,ey,ez),R=BR+.012;
           if(L<R&&L>0){const nx=ex/L,ny=ey/L,nz=ez/L;p.x=hx+cx+nx*R;p.y=RIM_Y+ny*R;p.z=cz+nz*R;
-            const vn=v.x*nx+v.y*ny+v.z*nz;if(vn<0){const k=-1.45*vn;v.x+=nx*k;v.y+=ny*k;v.z+=nz*k;v.x*=.85;v.z*=.85;B.hit=true;}}
+            const vn=v.x*nx+v.y*ny+v.z*nz;if(vn<0){const k=-1.45*vn;v.x+=nx*k;v.y+=ny*k;v.z+=nz*k;v.x*=.85;v.z*=.85;B.hit=true;missKick(v,p,false);}}
         }
       }
       if(py>RIM_Y&&p.y<=RIM_Y&&dd<RIM_R-.02&&!B.counted){
@@ -1681,7 +1693,7 @@ const Online=(()=>{
   W('releaseBall',o=>{
     if(GS.net&&!CUR.human)return;   // the opponent's shot comes from the server
     o();
-    if(GS.net){S({t:'shot',x:r3(B.pos.x),y:r3(B.pos.y),z:r3(B.pos.z),vx:r3(B.vel.x),vy:r3(B.vel.y),vz:r3(B.vel.z),pf:B.perfect?1:0,pts:B.pts,dk:B.dunk?1:0});
+    if(GS.net){S({t:'shot',x:r3(B.pos.x),y:r3(B.pos.y),z:r3(B.pos.z),vx:r3(B.vel.x),vy:r3(B.vel.y),vz:r3(B.vel.z),pf:B.perfect?1:0,pts:B.pts,dk:B.dunk?1:0,ms:B.miss?1:0});
       NB={x:B.pos.x,y:B.pos.y,z:B.pos.z,vx:B.vel.x,vy:B.vel.y,vz:B.vel.z,at:performance.now()};}
   });
 
