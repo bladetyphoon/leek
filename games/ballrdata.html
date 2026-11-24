@@ -1153,7 +1153,7 @@ function stepBall(dt){
       }
       if(py>RIM_Y&&p.y<=RIM_Y&&dd<RIM_R-.02&&!B.counted){
         B.counted=true;made++;if(B.shooter){B.shooter.score+=B.pts;B.shooter.made++;}hud();NET.vx+=v.x*.12;NET.vz+=v.z*.12;
-        popText('+'+B.pts,{x:HOOP_X,y:RIM_Y+.45,z:0},{size:38});if(B.dunk)popText('DUNK',{x:HOOP_X,y:RIM_Y+1.3,z:0},{color:'#ffd21f',size:52,dur:1700});onScore(B.shooter);
+        {const an={x:HOOP_X,y:RIM_Y+.45,z:0};popText('+'+B.pts,an,{size:38});if(B.dunk)popText('DUNK',an,{color:'#ffd21f',size:34,dur:1700});}onScore(B.shooter);
       }
       if(dd<RIM_R&&p.y<RIM_Y&&p.y>RIM_Y-.5){
         const f=Math.exp(-4*h);v.x*=f;v.z*=f;v.y*=Math.exp(-h);
@@ -2178,7 +2178,7 @@ const Online=(()=>{
       case 'block':{const a=act(m.who);if(a)popText(m.cl?'SWATTED':'BLOCK',a,m.cl?{color:'#ff5a2e',size:44}:undefined);break;}
       case 'ank':{const a=act(m.who);if(a){const q=a.P;q.trip={t:0,dur:ANKLE_T,roll:Math.random()<.5?-1:1};q.dash=q.spin=q.swipe=q.fake=null;q.slow=0;popText('ANKLES',a,{color:'#ff5a2e',size:46,dur:1500});}break;}
       case 'sc':ME.score=m.sc[myTeam];CPU.score=m.sc[1-myTeam];hud();NET.vx+=B.vel.x*.12;NET.vz+=B.vel.z*.12;
-        popText('+'+m.pts,{x:HOOP_X,y:RIM_Y+.45,z:0},{size:38});if(B.dunk)popText('DUNK',{x:HOOP_X,y:RIM_Y+1.3,z:0},{color:'#ffd21f',size:52,dur:1700});GS.phase='scored';break;
+        {const an={x:HOOP_X,y:RIM_Y+.45,z:0};popText('+'+m.pts,an,{size:38});if(B.dunk)popText('DUNK',an,{color:'#ffd21f',size:34,dur:1700});}GS.phase='scored';break;
       case 'out':{const a=act(m.who);if(!a)break;const q=a.P;popText('OUT',a,{color:'#ffd21f'});GS.freeze=true;GS.phase='scored';q.dash=q.spin=null;
         if(q.mode==='aim'){q.mode='move';a.M.active=false;q.path=null;q.lay=null;q.style='jump';hideMeter(true,a);}break;}
       case 'left':{const a=act(m.s);if(!a||a.gone)break;   // a player dropped out mid-match: they vanish, the game goes on
